@@ -1,32 +1,24 @@
-#!/usr/bin/env python
 # coding=utf-8
 from __future__ import unicode_literals
 
-import os
-import json
-import codecs
+# Path constants for jshost
+DEFAULT_JUPYTER_GITHUB_URL = 'https://chfw.github.io/jupyter-echarts/echarts'
 
-from pyecharts.utils import get_resource_dir
+# for backward compatibility
+DEFAULT_HOST = DEFAULT_JUPYTER_GITHUB_URL
 
-
-DEFAULT_HOST = 'https://chfw.github.io/jupyter-echarts/echarts'
-
-CONFIGURATION = dict(
-    HOST='/nbextensions/echarts'
-)
-
-DEFAULT_ECHARTS_REGISTRY = os.path.join(
-    get_resource_dir('templates'), 'js', 'echarts', 'registry.json')
-
-with codecs.open(DEFAULT_ECHARTS_REGISTRY, 'r', 'utf-8') as f:
-    content = f.read()
-    CONFIG = json.loads(content)
-
-DEFAULT_JS_LIBRARIES = CONFIG['FILE_MAP']
-CITY_NAME_PINYIN_MAP = CONFIG['PINYIN_MAP']
+JUPYTER_LOCALHOST_URL = '/nbextensions/echarts'
 
 PAGE_TITLE = "Echarts"
 
+SYMBOL = {
+    "plane": 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.'
+             '063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.'
+             '305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.'
+             '799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.'
+             '531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134'
+             '.449-92.931l12.238-241.308L1705.06,1318.313z'
+}
 
 CITY_GEO_COORDS = {
     '阿城': [126.58, 45.32],
@@ -659,6 +651,18 @@ CITY_GEO_COORDS = {
     '邹城': [116.58, 35.24],
     '遵化': [117.58, 40.11],
     '遵义': [106.9, 27.7],
+    '晋中': [112.75, 37.68],
+    '吕梁': [111.13, 37.52],
+    '呼伦贝尔': [119.77, 49.22],
+    '巴彦淖尔': [107.42, 40.75],
+    '抚州': [116.35, 28.0],
+    '襄阳': [112.2, 32.08],
+    '黄冈': [114.87, 30.45],
+    '红河': [103.4, 23.37],
+    '文山': [104.25, 23.37],
+    '商洛': [109.93, 33.87],
+    '定西': [104.62, 35.58],
+    '陇南': [104.92, 33.4],
     '北京市': [116.4, 39.9],
     '天安门': [116.38, 39.9],
     '东城区': [116.42, 39.93],

@@ -1,16 +1,14 @@
-#!/usr/bin/env python
 # coding=utf-8
 
-from pyecharts.base import Base
+from pyecharts.chart import Chart
 from pyecharts.option import get_all_options
 
 
-class Bar(Base):
+class Bar(Chart):
     """
-    <<< Bar chart >>>
+    <<< 柱状图/条形图 >>>
 
-    Bar chart shows different data through the height of a bar, which is used in
-    rectangular coordinate with at least 1 category axis.
+    柱状/条形图，通过柱形的高度/条形的宽度来表现数据的大小。
     """
 
     def __init__(self, title="", subtitle="", **kwargs):
@@ -21,25 +19,28 @@ class Bar(Base):
 
     def __add(self, name, x_axis, y_axis,
               is_stack=False,
+              bar_category_gap="20%",
               **kwargs):
         """
 
         :param name:
-            Series name used for displaying in tooltip and filtering with legend,
-            or updating data and configuration with setOption.
+            系列名称，用于 tooltip 的显示，legend 的图例筛选。
         :param x_axis:
-            data of xAixs
+            x 坐标轴数据。
         :param y_axis:
-            data of yAxis
+            y 坐标轴数据。
         :param is_stack:
-            It specifies whether to stack category axis.
+            数据堆叠，同个类目轴上系列配置相同的 stack 值可以堆叠放置。默认为 False。
         :param kwargs:
         """
         assert len(x_axis) == len(y_axis)
         kwargs.update(x_axis=x_axis)
         chart = get_all_options(**kwargs)
 
-        is_stack = "stack_" + str(self._option['series_id']) if is_stack else ""
+        if is_stack:
+            is_stack = "stack_" + str(self._option['series_id'])
+        else:
+            is_stack = ""
         xaxis, yaxis = chart['xy_axis']
         self._option.update(xAxis=xaxis, yAxis=yaxis)
         self._option.get('legend')[0].get('data').append(name)
@@ -49,6 +50,7 @@ class Bar(Base):
             "name": name,
             "data": y_axis,
             "stack": is_stack,
+            "barCategoryGap": bar_category_gap,
             "label": chart['label'],
             "markPoint": chart['mark_point'],
             "markLine": chart['mark_line'],

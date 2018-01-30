@@ -1,22 +1,19 @@
-#!/usr/bin/env python
 # coding=utf-8
 
-from pyecharts import template
-from pyecharts import utils
+import pyecharts.utils as utils
+import pyecharts.engine as engine
+from pyecharts.conf import PYTHON_CONFIG, JUPYTER_CONFIG
 import pyecharts.constants as constants
-from pyecharts.template import (
-    produce_require_configuration,
-    produce_html_script_list)
 
 
-class Page(object):
+class Page(list):
     """
     A composite object to present multiple charts vertically in a single page
     """
-    def __init__(self, jshost=None, page_title=constants.PAGE_TITLE):
-        self.__charts = []
+
+    def __init__(self, page_title=constants.PAGE_TITLE):
+        list.__init__([])
         self._page_title = page_title
-        self._jshost = jshost if jshost else constants.CONFIGURATION['HOST']
 
     def add(self, achart_or_charts):
         """
@@ -26,26 +23,18 @@ class Page(object):
         :return:
         """
         if isinstance(achart_or_charts, list):
-            self.__charts.extend(achart_or_charts)
+            self.extend(achart_or_charts)
         else:
-            self.__charts.append(achart_or_charts)
+            self.append(achart_or_charts)
 
-    def render(self, path="render.html"):
-        """
-        Produce rendered charts in a html file
-
-        :param path:
-        :return:
-        """
-        template_name = "multicharts.html"
-        chart_content = self.render_embed()
-        dependencies = self._merge_dependencies()
-        script_list = produce_html_script_list(dependencies)
-        tmp = template.JINJA2_ENV.get_template(template_name)
-        html = tmp.render(multi_chart_content=chart_content,
-                          page_title=self._page_title,
-                          script_list=script_list)
-        html = utils.freeze_js(html)
+    def render(self,
+               path='render.html',
+               template_name='simple_page.html',
+               object_name='page',
+               extra_context=None):
+        context = {object_name: self}
+        context.update(extra_context or {})
+        html = engine.render(template_name, **context)
         utils.write_utf8_html_file(path, html)
 
     def render_embed(self):
@@ -54,42 +43,38 @@ class Page(object):
 
         :return:
         """
-        chart_content = ""
-        for chart in self.__charts:
-            chart_content += chart.render_embed()
-            chart_content += '<br>'
-        return chart_content
+        return '<br/> '.join([chart.render_embed() for chart in self])
 
     def get_js_dependencies(self):
         """
         Declare its javascript dependencies for embedding purpose
         """
         unordered_js_dependencies = self._merge_dependencies()
-        return produce_html_script_list(unordered_js_dependencies)
+        return PYTHON_CONFIG.produce_html_script_list(
+            unordered_js_dependencies)
 
     def _repr_html_(self):
         """
 
         :return:
         """
-        _tmp = "notebook.html"
-        doms = ""
-        components = ""
+        doms = components = ""
         dependencies = self._merge_dependencies()
-        for chart in self.__charts:
+        for chart in self:
             doms += chart._render_notebook_dom_()
             components += chart._render_notebook_component_()
 
-        require_config = produce_require_configuration(
-            dependencies, self._jshost)
-        tmp = template.JINJA2_ENV.get_template(_tmp)
-        html = tmp.render(
-            single_chart=components, dom=doms, **require_config)
-        return html
+        require_config = JUPYTER_CONFIG.produce_require_configuration(
+            dependencies)
+        return engine.render_notebook(
+            "notebook.html",
+            single_chart=components,
+            dom=doms,
+            **require_config)
 
     def _merge_dependencies(self):
         dependencies = set()
-        for chart in self.__charts:
+        for chart in self:
             dependencies = dependencies.union(chart._js_dependencies)
         # make sure echarts is the item in the list
         # require(['echarts'....], function(ec) {..}) need it to be first
@@ -98,3 +83,22 @@ class Page(object):
             dependencies.remove('echarts')
             dependencies = ['echarts'] + list(dependencies)
         return dependencies
+
+    @property
+    def js_dependencies(self):
+        return self._merge_dependencies()
+
+    @property
+    def page_title(self):
+        return self._page_title
+
+    @classmethod
+    def from_charts(cls, *args):
+        """
+        A shortcut class method for building page object from charts.
+        :param args:
+        :return:
+        """
+        p = cls()
+        p.extend(args)
+        return p
